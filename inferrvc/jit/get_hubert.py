@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from fairseq.checkpoint_utils import load_model_ensemble_and_task
+
 # from fairseq.data.data_utils import compute_mask_indices
 from fairseq.utils import index_put
 

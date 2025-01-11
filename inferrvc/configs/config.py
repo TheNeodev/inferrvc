@@ -17,6 +17,7 @@ import torch
 #     pass
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +65,7 @@ class Config:
     def load_config_json() -> dict:
         d = {}
         for config_file in version_config_list:
-            with open(os.path.join(os.path.dirname(__file__),config_file), "r") as f:
+            with open(os.path.join(os.path.dirname(__file__), config_file), "r") as f:
                 d[config_file] = json.load(f)
         return d
 
@@ -123,18 +124,22 @@ class Config:
     def use_fp32_config(self):
         for config_file in version_config_list:
             self.json_config[config_file]["train"]["fp16_run"] = False
-            with open(os.path.join(os.path.dirname(__file__),config_file), "r") as f:
-                strr = f.read().replace("true", "false") #Also not needed for inferencing but leaving.
-            with open(os.path.join(os.path.dirname(__file__),config_file), "w") as f:
+            with open(os.path.join(os.path.dirname(__file__), config_file), "r") as f:
+                strr = f.read().replace(
+                    "true", "false"
+                )  # Also not needed for inferencing but leaving.
+            with open(os.path.join(os.path.dirname(__file__), config_file), "w") as f:
                 f.write(strr)
-        #also not needed for inference
+        # also not needed for inference
         # with open("infer/modules/train/preprocess.py", "r") as f:
         #     strr = f.read().replace("3.7", "3.0")
         # with open("infer/modules/train/preprocess.py", "w") as f:
         #     f.write(strr)
-        logger.info("Overwriting configs.json for accelerator use.")#print("overwrite preprocess and configs.json")
+        logger.info(
+            "Overwriting configs.json for accelerator use."
+        )  # print("overwrite preprocess and configs.json")
 
-    #I don't think this is used for inference but we will see.
+    # I don't think this is used for inference but we will see.
     def device_config(self) -> tuple:
         if torch.cuda.is_available():
             if self.has_xpu():
@@ -162,7 +167,7 @@ class Config:
                 / 1024
                 + 0.4
             )
-            #not needed for inferencing
+            # not needed for inferencing
             # if self.gpu_mem <= 4:
             #     with open("infer/modules/train/preprocess.py", "r") as f:
             #         strr = f.read().replace("3.7", "3.0")
@@ -250,5 +255,5 @@ class Config:
                     )
                 except:
                     pass
-        logger.info("Selecting device:%s, is_half:%s" % (self.device,self.is_half))
+        logger.info("Selecting device:%s, is_half:%s" % (self.device, self.is_half))
         return x_pad, x_query, x_center, x_max
