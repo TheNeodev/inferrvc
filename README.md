@@ -1,7 +1,6 @@
 # RVC Inference
 
-[**English**](./README.md) | [**中文简体**](./docs/README.ch.md) | [**日本語**](./docs/README.ja.md) | [**한국어**](./docs/README.ko.md) | [**Français**](./docs/README.fr.md)| [**Türkçe**](./docs/README.tr.md)
-------
+
 Translations provided by GPT-4.
 
 This project is a lightweight, fast, and memory efficient api that runs v1/v2 RVC models. It is intended for use in production environments and compatibility with existing codebases.
@@ -9,14 +8,12 @@ It makes integrating RVC as a stage in a pipeline or workflow easy. Installation
 Linux/Windows/Mac and the latest python versions.
 ## Install
 If using Python 3.11+ install the fairseq fork first as fairseq is not yet compatible with 3.11. (Will take a minute).
-```bash
-pip install https://github.com/One-sixth/fairseq/archive/main.zip
-```
+
 
 Pip install the repo like below and all dependencies will be installed automatically.
 ```bash
 pip uninstall inferrvc
-pip install https://github.com/CircuitCM/RVC-inference/raw/main/dist/inferrvc-1.0-py3-none-any.whl --no-cache-dir
+pip install inferrvc --no-cache-dir
 ```
 By default pypi installs the pytorch cpu build. To install for gpu using Nvidia or AMD, visit https://pytorch.org/get-started/locally/ and pip install `torch` and `torchaudio` with gpu _before_ installing this library.
 
@@ -81,10 +78,3 @@ sf.write('path/to/audio_obama.wav',paudio2,44100)
  - Flexible referencing of RVC model directory and files.
  - Disabled the butterworth filter by default as there is usually no difference and might slightly reduce quality. Can be enabled with `inferrvc.pipeline.enable_butterfilter=True`.
 
-### Todos:
-- [ ] Test different python versions.
-- [ ] Test different OS's and pitch estimators. (The other estimators should be ported but only RMVPE was tested, it is the best)
-- [ ] Move the remaining operations to the single primary device (eg gpu), to reduce latency and slow down resulting from memory transfers.
-  - [ ] Replace remaining numpy code with torch equivalents `torch.where` and `torch.masked_select`.
-  - [ ] Reimplement the index mask with pytorch for gpu devices.
-- [ ] Make use of torch 2.0 .compile() to speed up the v1/v2 models if possible.
