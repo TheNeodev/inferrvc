@@ -23,18 +23,19 @@ from huggingface_hub import hf_hub_download
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 
-_cpu=torch.device("cpu")
-_gpu=torch.device("cuda:0")
-_devgp=dev=_gpu if torch.cuda.is_available() else _cpu
+_cpu = torch.device("cpu")
+_gpu = torch.device("cuda:0")
+_devgp = dev = _gpu if torch.cuda.is_available() else _cpu
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
-bh,ah=torch.from_numpy(bh).to(_gpu,non_blocking=True),torch.from_numpy(ah).to(_gpu,non_blocking=True)
+bh, ah = torch.from_numpy(bh).to(_gpu, non_blocking=True), torch.from_numpy(ah).to(
+    _gpu, non_blocking=True
+)
 
 
-
-@lru_cache #torch.Tensor should be serializable
-def cache_harvest_f0(audio:torch.Tensor, fs, f0max, f0min, frame_period):
-    acast=audio.numpy().astype(np.double)
+@lru_cache  # torch.Tensor should be serializable
+def cache_harvest_f0(audio: torch.Tensor, fs, f0max, f0min, frame_period):
+    acast = audio.numpy().astype(np.double)
     f0, t = pyworld.harvest(
         acast,
         fs=fs,
@@ -46,7 +47,8 @@ def cache_harvest_f0(audio:torch.Tensor, fs, f0max, f0min, frame_period):
     return f0
 
 
-enable_butterfilter=False
+enable_butterfilter = False
+
 
 class Pipeline(object):
     def __init__(self, tgt_sr, config):
@@ -69,7 +71,7 @@ class Pipeline(object):
 
     def get_f0(
         self,
-        audio:torch.Tensor,
+        audio: torch.Tensor,
         p_len,
         f0_up_key,
         f0_method,
@@ -106,7 +108,7 @@ class Pipeline(object):
             # Pick a batch size that doesn't cause memory errors on your gpu
             batch_size = 512
             # Compute pitch using first gpu, probably don't need to copy.
-            #audio = torch.tensor(np.copy(x))[None].float()
+            # audio = torch.tensor(np.copy(x))[None].float()
             f0, pd = torchcrepe.predict(
                 audio,
                 self.sr,
@@ -127,10 +129,11 @@ class Pipeline(object):
                 from .rmvpe import RMVPE
 
                 logger.info(
-                    "Loading rmvpe model,%s" % hf_hub_download('lj1995/VoiceConversionWebUI', 'rmvpe.pt'),
+                    "Loading rmvpe model,%s"
+                    % hf_hub_download("lj1995/VoiceConversionWebUI", "rmvpe.pt"),
                 )
                 self.model_rmvpe = RMVPE(
-                    hf_hub_download('lj1995/VoiceConversionWebUI', 'rmvpe.pt'),
+                    hf_hub_download("lj1995/VoiceConversionWebUI", "rmvpe.pt"),
                     is_half=self.is_half,
                     device=self.device,
                 )
@@ -170,7 +173,7 @@ class Pipeline(object):
         model,
         net_g,
         sid,
-        audio0:torch.Tensor,
+        audio0: torch.Tensor,
         pitch,
         pitchf,
         times,
@@ -184,14 +187,18 @@ class Pipeline(object):
         if self.is_half:
             feats = feats.half()
         else:
-            feats = feats.float() #redundant after filtfilt
+            feats = feats.float()  # redundant after filtfilt
         if feats.dim() == 2:  # double channels
             feats = feats.mean(-1)
         assert feats.dim() == 1, feats.dim()
         feats = feats.view(1, -1)
-        padding_mask = torch.BoolTensor(feats.shape).to(self.device,non_blocking=True).fill_(False)
+        padding_mask = (
+            torch.BoolTensor(feats.shape)
+            .to(self.device, non_blocking=True)
+            .fill_(False)
+        )
         inputs = {
-            "source": feats.to(self.device,non_blocking=True),
+            "source": feats.to(self.device, non_blocking=True),
             "padding_mask": padding_mask,
             "output_layer": 9 if version == "v1" else 12,
         }
@@ -209,7 +216,7 @@ class Pipeline(object):
             if self.is_half:
                 npy = feats[0].to(_cpu, dtype=torch.float32, non_blocking=False).numpy()
             else:
-                npy = feats[0].to(_cpu,non_blocking=False).numpy()
+                npy = feats[0].to(_cpu, non_blocking=False).numpy()
 
             # _, I = index.search(npy, 1)
             # npy = big_npy[I.squeeze()]
@@ -220,12 +227,18 @@ class Pipeline(object):
             npy = np.sum(big_npy[ix] * np.expand_dims(weight, axis=2), axis=1)
             if self.is_half:
                 feats = (
-                    torch.from_numpy(npy).unsqueeze(0).to(self.device,dtype=torch.float16,non_blocking=True) * index_rate
+                    torch.from_numpy(npy)
+                    .unsqueeze(0)
+                    .to(self.device, dtype=torch.float16, non_blocking=True)
+                    * index_rate
                     + (1 - index_rate) * feats
                 )
             else:
                 feats = (
-                    torch.from_numpy(npy).unsqueeze(0).to(self.device,non_blocking=True) * index_rate
+                    torch.from_numpy(npy)
+                    .unsqueeze(0)
+                    .to(self.device, non_blocking=True)
+                    * index_rate
                     + (1 - index_rate) * feats
                 )
 
@@ -253,7 +266,9 @@ class Pipeline(object):
         with torch.no_grad():
             hasp = pitch is not None and pitchf is not None
             arg = (feats, p_len, pitch, pitchf, sid) if hasp else (feats, p_len, sid)
-            audio1 = (net_g.infer(*arg)[0][0, 0]).data.to(self.device,non_blocking=True) #now it comes out gpu and tensor
+            audio1 = (net_g.infer(*arg)[0][0, 0]).data.to(
+                self.device, non_blocking=True
+            )  # now it comes out gpu and tensor
             del hasp, arg
         del feats, p_len, padding_mask
         # if torch.cuda.is_available():
@@ -268,7 +283,7 @@ class Pipeline(object):
         model,
         net_g,
         sid,
-        audio:torch.Tensor,
+        audio: torch.Tensor,
         times,
         f0_up_key,
         f0_method,
@@ -278,15 +293,21 @@ class Pipeline(object):
         filter_radius,
         version,
         protect,
-        f0_spec:str|np.ndarray|None=None,
+        f0_spec: str | np.ndarray | None = None,
     ):
         (index, big_npy) = index
-        #The butterworth highpass probably only serves as a safe gaurd, might want to remove it and ask ppl to add their own preprocessing step.
-        #it's an extra memory expensive step for little gain.
-        #I think the model also has a built in cutoff DB where it's not applied at ~-45db too.
+        # The butterworth highpass probably only serves as a safe gaurd, might want to remove it and ask ppl to add their own preprocessing step.
+        # it's an extra memory expensive step for little gain.
+        # I think the model also has a built in cutoff DB where it's not applied at ~-45db too.
         if enable_butterfilter:
-            audio=torchaudio.functional.filtfilt(audio.to(torch.float64,non_blocking=True),ah,bh).to(torch.float32,non_blocking=True) #assume on gpu
-        npaud=audio.to(_cpu,non_blocking=False).numpy() #turning this into a torch section would speed it up
+            audio = torchaudio.functional.filtfilt(
+                audio.to(torch.float64, non_blocking=True), ah, bh
+            ).to(
+                torch.float32, non_blocking=True
+            )  # assume on gpu
+        npaud = audio.to(
+            _cpu, non_blocking=False
+        ).numpy()  # turning this into a torch section would speed it up
         audio_pad = np.pad(npaud, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []
         if audio_pad.shape[0] > self.t_max:
@@ -306,7 +327,9 @@ class Pipeline(object):
         audio_opt = []
         t = None
         t1 = ttime()
-        audio_pad=torch.nn.functional.pad(audio, (self.t_pad, self.t_pad), mode="reflect")
+        audio_pad = torch.nn.functional.pad(
+            audio, (self.t_pad, self.t_pad), mode="reflect"
+        )
         del audio
         p_len = audio_pad.shape[1] // self.window
         if isinstance(f0_spec, str):
@@ -409,7 +432,7 @@ class Pipeline(object):
                     protect,
                 )[self.t_pad_tgt : -self.t_pad_tgt]
             )
-        #audio_opt = np.concatenate(audio_opt)
+        # audio_opt = np.concatenate(audio_opt)
         audio_opt = torch.cat(audio_opt, dim=0)
         del pitch, pitchf, sid
         return audio_opt

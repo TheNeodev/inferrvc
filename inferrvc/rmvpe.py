@@ -5,6 +5,7 @@ from typing import List
 
 import numpy as np
 import torch
+
 # just ignore for now not gonna work without a lot of wanky stuff
 # try:
 #     # Fix "Torch not compiled with CUDA enabled"
@@ -498,7 +499,11 @@ class RMVPE:
         self.resample_kernel = {}
         self.is_half = is_half
         if device is None:
-            device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+            device = (
+                torch.device("cuda:0")
+                if torch.cuda.is_available()
+                else torch.device("cpu")
+            )
         self.device = device
         self.mel_extractor = MelSpectrogram(
             is_half, 128, 16000, 1024, 160, None, 30, 8000
@@ -591,22 +596,20 @@ class RMVPE:
 
     def infer_from_audio(self, saudio: torch.Tensor | np.ndarray, thred=0.03):
         # torch.cuda.synchronize()
-        #t0 = ttime()
+        # t0 = ttime()
         if isinstance(saudio, np.ndarray):
-            saudio:torch.Tensor = torch.from_numpy(saudio)
+            saudio: torch.Tensor = torch.from_numpy(saudio)
         if saudio.dtype != torch.float32:
-            saudio:torch.Tensor = saudio.float()
+            saudio: torch.Tensor = saudio.float()
         saudio = saudio.to(self.device, non_blocking=True)
-        #print(audio.shape)
-        #print(audio.unsqueeze(0).shape)
-        mell = self.mel_extractor(
-            saudio, center=True #assume already 2d
-        )
+        # print(audio.shape)
+        # print(audio.unsqueeze(0).shape)
+        mell = self.mel_extractor(saudio, center=True)  # assume already 2d
         # torch.cuda.synchronize()
-        #t1 = ttime()
+        # t1 = ttime()
         hidden = self.mel2hidden(mell)
         # torch.cuda.synchronize()
-        #t2 = ttime()
+        # t2 = ttime()
         # print(234234,hidden.device.type)
         if "privateuseone" not in str(self.device):
             hidden = hidden.squeeze(0).cpu().numpy()
@@ -618,7 +621,7 @@ class RMVPE:
         f0 = self.decode(hidden, thred=thred)
 
         # torch.cuda.synchronize()
-        #t3 = ttime()
+        # t3 = ttime()
         # print("hmvpe:%s\t%s\t%s\t%s"%(t1-t0,t2-t1,t3-t2,t3-t0))
         return f0
 
