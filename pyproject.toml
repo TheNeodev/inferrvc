@@ -8,25 +8,28 @@ version = "1.2"
 authors = [{name = "Charles Marks", email = "charlesmarksco@gmail.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
-classifiers = ["License :: OSI Approved :: MIT License"]
-requires-python = ">=3.0" #just guessing here.
-dynamic = ["version", "description"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3"
+]
+requires-python = ">=3.7"  # Python 3.7+ is recommended for compatibility with Torch and other libraries
+dynamic = ["description"]
+
 dependencies = [
-    'numpy',
-    'scipy',
-    'soundfile',
-    'torch',
-    'torchaudio',
-    'librosa',
-    'pyworld',
-    'praat-parselmouth',
-    'torchcrepe',
-    'huggingface-hub',
-    'fairseq',
-    #'https://github.com/One-sixth/fairseq/archive/main.zip; python_version >= "3.11"',
-    'faiss-cpu',
-    'yt-dlp'
-    'audio-separator[gpu]'
+    "numpy",
+    "scipy",
+    "soundfile",
+    "torch",
+    "torchaudio",
+    "librosa",
+    "pyworld",
+    "praat-parselmouth",
+    "torchcrepe",
+    "huggingface-hub",
+    "fairseq",
+    "faiss-cpu",
+    "yt-dlp",
+    "audio-separator[gpu]"
 ]
 
 [project.urls]
@@ -34,4 +37,3 @@ Home = "https://github.com/CircuitCM/RVC-inference"
 
 [tool.flit.module]
 name = "inferrvc"
-
