@@ -23,7 +23,9 @@ dependencies = [
     'huggingface-hub',
     'fairseq',
     #'https://github.com/One-sixth/fairseq/archive/main.zip; python_version >= "3.11"',
-    'faiss-cpu'
+    'faiss-cpu',
+    'yt-dlp'
+    'audio-separator[gpu]'
 ]
 
 [project.urls]
