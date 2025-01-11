@@ -4,6 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "inferrvc"
+version = "1.2"
 authors = [{name = "Charles Marks", email = "charlesmarksco@gmail.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
